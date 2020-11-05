@@ -1,7 +1,7 @@
 # Rename the .all files using the .nel
 
 ## Introduction
-This python script will remane the .all in the folder based on the LineRunline inside the .nel files.
+This python script will remane the .all in the folder based on the LineRunline nelgroup inside the .nel files.
 
 ## Setup
 Several modules need to be install before using the script. You will need:
@@ -12,7 +12,7 @@ Several modules need to be install before using the script. You will need:
 ```
 usage: nelallrename.py [-h] allFolder nelFolder
 
-Rename the *.all files using the colunm linename inside the *.nel
+Rename the *.all files using the LineRunline nelgroup inside the .nel files.
 
 positional arguments:
   allFolder   allFolder (str): ALL folder path. This is the path where the *.all files to process are.
