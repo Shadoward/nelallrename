@@ -28,7 +28,7 @@ extras_require = {
 setup(
     name='fbfallrename',
     version='0.1.0',
-    description='Rename *.ALL using *.FBF filename colunm',
+    description='Rename *.ALL using *.NEL group LineRunline',
     long_description=readme,
     author='Patrice Ponchant',
     author_email='patrice.ponchant@furgo.com',
@@ -40,7 +40,7 @@ setup(
     license=license,
     packages=find_namespace_packages(where='src'),
     package_dir={'': 'src'},
-    keywords='FBF ALL Konsgberg Rename',
+    keywords='NEL ALL Konsgberg Rename',
     classifiers=[
         'Development Status :: 1 - Beta',
         'Natural Language :: English',
