@@ -37,11 +37,15 @@ from tqdm import *
 # 417574686f723a205061747269636520506f6e6368616e74
 ####### Code #######
 def main():
-    parser = ArgumentParser(description='Rename the *.all files using the colunm linename inside the *.nel',
-        epilog='Example: \n To rename the *.all file use python nelallremane.py c:/temp/all/ c:/temp/nel/ \n', formatter_class=RawTextHelpFormatter)
+    parser = ArgumentParser(description='Rename the *.all files using the *-position.fbf or .fbz files',
+        epilog='Example: \n To rename the *.all file use python splallremane.py -r -fbz c:/temp/all/ c:/temp/fbf/ FugroBrasilis-CRP-Position \n',
+        formatter_class=RawTextHelpFormatter)    
+    parser.add_argument('-r', action='store_true', default=False, dest='recursive', help='Search recursively for XTF files.')
+    parser.add_argument('-fbz', action='store_true', default=False, dest='fbfFormat', help='If FBZ, use this argument.')
     parser.add_argument('allFolder', action='store', help='allFolder (str): ALL folder path. This is the path where the *.all files to process are.')
-    parser.add_argument('nelFolder', action='store', help='nelFolder (str): NEl folder path. This is the path where the *.nel files to process are.')
-
+    parser.add_argument('splFolder', action='store', help='splFolder (str): SPL folder path. This is the path where the *.fbf/*.fbz files to process are.')
+    parser.add_argument('SPLposition', action='store', help='SPLposition (str): SPL postion file to be use to rename the *.all.')
+    
     if len(sys.argv)==1:
         parser.print_help()
         sys.exit(1)
@@ -54,87 +58,160 @@ def process(args):
     Uses this if called as __main__.
     """
     allFolder = args.allFolder
-    nelFolder = args.nelFolder
+    splFolder = args.splFolder
+    SPLposition = args.SPLposition
     
-    allListFile = glob.glob(allFolder + "\\*.all")
-    #nelListFile = glob.glob(nelFolder + "\\*.nel")
-    nelListFile = glob.glob(nelFolder + "\\Logging\\LogSPL\\*.nel") # if Starfix SPL folder    
+    # Defined Dataframe
+    dfSPL = pd.DataFrame(columns = ["SessionStart", "SessionEnd", "LineName"])
+    #dfAll = pd.DataFrame(columns = ["AllPath", "AllStartTime", "AllEndTime"])
+    dfAll = pd.DataFrame(columns = ["AllStartTime", "AllEndTime", "FilePath", "FileName", "Linename", "NewFileName"]) 
+    dftmp = pd.DataFrame(columns = ["AllStartTime", "AllEndTime", "FilePath", "FileName", "Linename", "NewFileName"]) 
     
-    dfNel = pd.DataFrame(columns = ["StartNel", "LineName"])
-       
-    print('')
-    print('Reading the NEl File')
-    with tqdm(total=len(nelListFile)) as pbar:
-        for n in nelListFile:
-            LineStart, LineName = NEL2CSV("LineRunline", n , nelFolder)
-            nel_series = pd.Series([LineStart, LineName], index = dfNel.columns)
-            dfNel = dfNel.append(nel_series, ignore_index=True)    
-            pbar.update(1)
+    # Check if SPL is a position file   
+    if SPLposition.find('-Position') == -1:
+        print ("The SPL file %s is not a position file, quitting" % SPLposition)
+        exit()
     
-    Today = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S.%f")
-    dfNel["EndNel"] = dfNel.StartNel.shift(-1).replace(np.nan, Today)    
-    dfNel["LineName"] = dfNel["LineName"].str.replace('"', '')
-    dfNel["LineName"] = dfNel["LineName"].str.replace(' ', '')
-    dfNel.StartNel = pd.to_datetime(dfNel.StartNel, format='%d/%m/%Y %H:%M:%S.%f') # format='%d/%m/%Y %H:%M:%S.%f' format='%Y/%m/%d %H:%M:%S.%f' 
-    dfNel.EndNel = pd.to_datetime(dfNel.EndNel, format='%d/%m/%Y %H:%M:%S.%f')
-    
-    dfAll = pd.DataFrame(columns = ["AllPath", "StartAll", "EndAll"]) 
-            
+    if args.recursive:
+        allListFile = glob.glob(allFolder + "\\**\\*.all", recursive=True)
+    else:
+        allListFile = glob.glob(allFolder + "\\*.all")
+        
+    if args.fbfFormat:
+        splListFile = glob.glob(splFolder + "\\**\\" + SPLposition + ".fbz", recursive=True)
+    else:
+        splListFile = glob.glob(splFolder + "\\**\\" + SPLposition + ".fbf", recursive=True)
+        print('')
+        print('Reading the FBF Files')
+        with tqdm(total=len(splListFile)) as pbar:
+            for n in splListFile:
+                SessionStart, SessionEnd, LineName = FBF2CSV(n , splFolder)
+                dfSPL = dfSPL.append(pd.Series([SessionStart, SessionEnd, LineName], 
+                                       index=dfSPL.columns ), ignore_index=True)           
+                pbar.update(1)
+        
+
+    # Format datetime
+    dfSPL.SessionStart = pd.to_datetime(dfSPL.SessionStart, format='%d/%m/%Y %H:%M:%S.%f') # format='%d/%m/%Y %H:%M:%S.%f' format='%Y/%m/%d %H:%M:%S.%f' 
+    dfSPL.SessionEnd = pd.to_datetime(dfSPL.SessionEnd, format='%d/%m/%Y %H:%M:%S.%f')
+           
     print('')
     print('Reading the ALL File')
     with tqdm(total=len(allListFile)) as pbar:
         for f in allListFile:
             # reading ALL file (count, start, end)
             r = ALLReader(f)            
-            count, StartAll, EndAll = r.getRecordCount() # read through the entire file as fast as possible to get a count of all records.
-            all_series = pd.Series([f, StartAll, EndAll], index = dfAll.columns)
-            dfAll = dfAll.append(all_series, ignore_index=True)        
+            count, AllStartTime, AllEndTime = r.getRecordCount() # read through the entire file as fast as possible to get a count of all records.
+            ALLName = os.path.splitext(os.path.basename(f))[0] 
+            dfAll = dfAll.append(pd.Series([AllStartTime, AllEndTime, f, ALLName, "", ""], 
+                        index=dfAll.columns ), ignore_index=True)    
             r.rewind()
             r.close()                     
             pbar.update(1)
-    
-    dfAll.StartAll = pd.to_datetime(dfAll.StartAll, unit='s')  # format='%d/%m/%Y %H:%M:%S.%f' format='%Y/%m/%d %H:%M:%S.%f'
-    dfAll.EndAll = pd.to_datetime(dfAll.EndAll, unit='s')
-    dfLog = pd.DataFrame(columns = ["AllStartTime", "AllEndTime", "File Path", "File Name", "Linename", "New File Name"])
-           
+
+    # Format datetime
+    dfAll.AllStartTime = pd.to_datetime(dfAll.AllStartTime, unit='s')  # format='%d/%m/%Y %H:%M:%S.%f' format='%Y/%m/%d %H:%M:%S.%f'
+    dfAll.AllEndTime = pd.to_datetime(dfAll.AllEndTime, unit='s')
+        
     print('')
     print('Renaming the ALL files')
     with tqdm(total=len(allListFile)) as pbar:
-        for index, row in dfNel.iterrows():                  
-            Start = row['StartNel']
-            End = row['EndNel']
+        for index, row in dfSPL.iterrows():                  
+            Start = row['SessionStart']
+            End = row['SessionEnd']
             Name = row['LineName']   
-            dffilter = dfAll[dfAll.StartAll.between(Start, End)]   
+            dffilter = dfAll[dfAll.AllStartTime.between(Start, End)]
             for index, el in dffilter.iterrows():
-                AllFile =  el['AllPath']
-                AllStartTime = el['StartAll']
-                AllEndTime = el['EndAll']          
+                AllFile =  el['FilePath']
+                AllStartTime = el['AllStartTime']
+                AllEndTime = el['AllEndTime']          
                 FolderName = os.path.split(AllFile)[0]
                 ALLName = os.path.splitext(os.path.basename(AllFile))[0]                               
                 NewName = FolderName + '\\' + ALLName + '_' + Name + '.all'
-                dfLog = dfLog.append(pd.Series([AllStartTime, AllEndTime, FolderName, ALLName, Name, NewName], 
-                                       index=dfLog.columns ), ignore_index=True)                
+                dftmp = dftmp.append(pd.Series([AllStartTime, AllEndTime, AllFile, ALLName, Name, NewName], 
+                                    index=dftmp.columns ), ignore_index=True)                
                 if os.path.isfile(AllFile):
                     os.rename(AllFile, NewName)        
                 pbar.update(1)
-    dfLog.to_csv(allFolder + "MBES_Logs.csv", index=False)
+                
+    # Updated the final dataframe to export the log
+    dfAll.set_index('AllStartTime', inplace=True)
+    dftmp.set_index('AllStartTime', inplace=True)
+    dfAll.update(dftmp)
+    dfAll.to_csv(allFolder + "MBES_Logs.csv", index=True)
 
-##### Convert NEL to CSV #####
+##### Convert NEL/FBF/FBZ to CSV #####
 def NEL2CSV(Nelkey, NelFileName, Path):
+    ##### Convert NEL to CSV #####
     FileName = os.path.splitext(os.path.basename(NelFileName))[0]    
     csvfilepath = Path + FileName + "_" + Nelkey + '.csv'
     cmd = 'for %i in ("' + NelFileName + '") do nel2asc -v "%i" ' + Nelkey + ' > ' + csvfilepath
     subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     
-    dfS = pd.read_csv(csvfilepath, header=None)
+    #created the variables
+    dfS = pd.read_csv(csvfilepath, header=None, skipinitialspace=True)
     LineStart = dfS.iloc[0][0]
-    LineName = dfS.iloc[0][3]   
-        
-    os.remove(csvfilepath)   
+    LineName = dfS.iloc[0][3]
+    
+    #cleaning
+    os.remove(csvfilepath)
+    del dfS, FileName, csvfilepath   
     
     return LineStart, LineName
 
+def FBF2CSV(FBFFileName, Path):
+    ##### Convert FBF to CSV #####
+    FileName = os.path.splitext(os.path.basename(FBFFileName))[0]    
+    fbffilepath = Path + FileName + '.csv'
+    cmd = 'for %i in ("' + FBFFileName + '") do fbf2asc -i %i -o "' + fbffilepath + '"'
+    subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    #subprocess.call(cmd, shell=True) ### For debugging
+    
+    #created the variables
+    dfS = pd.read_csv(fbffilepath, header=None, skipinitialspace=True, na_values='NoLineName')
 
+    SessionStart = dfS.iloc[0][0]
+    SessionEnd = dfS.iloc[-1][0]
+    LineName = dfS.iloc[0][8]
+    
+    #cleaning  
+    os.remove(fbffilepath)
+    del dfS, FileName, fbffilepath
+    
+    #checking if linename is empty as is use in all other process
+    if pd.isnull(LineName):
+        print ("Linename is empty in %s, quitting" % FBFFileName)
+        exit()
+    else:
+        return SessionStart, SessionEnd, LineName   
+
+def FBZ2CSV(FBZFileName, Path):
+    ##### Convert FBZ to CSV #####
+    FileName = os.path.splitext(os.path.basename(FBZFileName))[0]    
+    fbzfilepath = Path + FileName + '.csv'
+    cmd = 'for %i in ("' + FBZFileName + '") do C:\ProgramData\Fugro\Starfix2018\Fugro.DescribedData2Ascii.exe %i > "' + fbzfilepath + '"'
+    subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    #subprocess.call(cmd, shell=True) ### For debugging
+    
+    #created the variables
+    dfS = pd.read_csv(fbzfilepath, header=None, skipinitialspace=True, na_values='NoLineName')
+
+    SessionStart = dfS.iloc[0][0]
+    SessionEnd = dfS.iloc[-1][0]
+    LineName = dfS.iloc[0][8]
+    
+    #cleaning  
+    os.remove(fbzfilepath)
+    del dfS, FileName, fbzfilepath
+    
+    #checking if linename is empty as is use in all other process
+    if pd.isnull(LineName):
+        print ("Linename is empty in %s, quitting" % FBZFileName)
+        exit()
+    else:
+        return SessionStart, SessionEnd, LineName
+
+  
 if __name__ == "__main__":
     now = datetime.datetime.now() # time the process
     main()
