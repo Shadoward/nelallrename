@@ -38,7 +38,7 @@ from tqdm import *
 ####### Code #######
 def main():
     parser = ArgumentParser(description='Rename the *.all files using the colunm linename inside the *.nel',
-        epilog='Example: \n To rename the *.all file use python fbfallremane.py c:/temp/all/ c:/temp/nel/ \n', formatter_class=RawTextHelpFormatter)
+        epilog='Example: \n To rename the *.all file use python nelallremane.py c:/temp/all/ c:/temp/nel/ \n', formatter_class=RawTextHelpFormatter)
     parser.add_argument('allFolder', action='store', help='allFolder (str): ALL folder path. This is the path where the *.all files to process are.')
     parser.add_argument('nelFolder', action='store', help='nelFolder (str): NEl folder path. This is the path where the *.nel files to process are.')
 
@@ -57,8 +57,8 @@ def process(args):
     nelFolder = args.nelFolder
     
     allListFile = glob.glob(allFolder + "\\*.all")
-    nelListFile = glob.glob(nelFolder + "\\*.nel")
-    #nelListFile = glob.glob(nelFolder + "\\Logging\\LogSPL\\*.nel") # if Starfix SPL folder    
+    #nelListFile = glob.glob(nelFolder + "\\*.nel")
+    nelListFile = glob.glob(nelFolder + "\\Logging\\LogSPL\\*.nel") # if Starfix SPL folder    
     
     dfNel = pd.DataFrame(columns = ["StartNel", "LineName"])
        
@@ -95,6 +95,7 @@ def process(args):
     
     dfAll.StartAll = pd.to_datetime(dfAll.StartAll, unit='s')  # format='%d/%m/%Y %H:%M:%S.%f' format='%Y/%m/%d %H:%M:%S.%f'
     dfAll.EndAll = pd.to_datetime(dfAll.EndAll, unit='s')
+    dfLog = pd.DataFrame(columns = ["AllStartTime", "AllEndTime", "File Path", "File Name", "Linename", "New File Name"])
            
     print('')
     print('Renaming the ALL files')
@@ -105,13 +106,18 @@ def process(args):
             Name = row['LineName']   
             dffilter = dfAll[dfAll.StartAll.between(Start, End)]   
             for index, el in dffilter.iterrows():
-                AllFile =  el['AllPath']                
+                AllFile =  el['AllPath']
+                AllStartTime = el['StartAll']
+                AllEndTime = el['EndAll']          
                 FolderName = os.path.split(AllFile)[0]
                 ALLName = os.path.splitext(os.path.basename(AllFile))[0]                               
                 NewName = FolderName + '\\' + ALLName + '_' + Name + '.all'
+                dfLog = dfLog.append(pd.Series([AllStartTime, AllEndTime, FolderName, ALLName, Name, NewName], 
+                                       index=dfLog.columns ), ignore_index=True)                
                 if os.path.isfile(AllFile):
-                    os.rename(AllFile, NewName)            
-                pbar.update(1)  
+                    os.rename(AllFile, NewName)        
+                pbar.update(1)
+    dfLog.to_csv(allFolder + "MBES_Logs.csv", index=False)
 
 ##### Convert NEL to CSV #####
 def NEL2CSV(Nelkey, NelFileName, Path):

@@ -15,7 +15,6 @@ install_requires = [
     'pandas',
     'glob',
     'tqdm',
-    'bokeh',
 ]
 
 extras_require = {
@@ -26,8 +25,8 @@ extras_require = {
 }
 
 setup(
-    name='fbfallrename',
-    version='0.1.0',
+    name='nelallrename',
+    version='0.2.0',
     description='Rename *.ALL using *.NEL group LineRunline',
     long_description=readme,
     author='Patrice Ponchant',
@@ -42,7 +41,7 @@ setup(
     package_dir={'': 'src'},
     keywords='NEL ALL Konsgberg Rename',
     classifiers=[
-        'Development Status :: 1 - Beta',
+        'Development Status :: 2 - Beta',
         'Natural Language :: English',
         'Topic :: Scientific/Engineering'
         "Programming Language :: Python :: 3",
