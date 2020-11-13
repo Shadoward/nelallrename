@@ -13,7 +13,7 @@ install_requires = [
     'argparse',
     'numpy',
     'pandas',
-    'glob',
+    'glob3',
     'tqdm',
 ]
 
