@@ -25,9 +25,9 @@ extras_require = {
 }
 
 setup(
-    name='nelallrename',
-    version='0.2.0',
-    description='Rename *.ALL using *.NEL group LineRunline',
+    name='splallrename',
+    version='0.3.0',
+    description='Rename *.ALL using *.FBF/FBZ files',
     long_description=readme,
     author='Patrice Ponchant',
     author_email='patrice.ponchant@furgo.com',
@@ -39,9 +39,9 @@ setup(
     license=license,
     packages=find_namespace_packages(where='src'),
     package_dir={'': 'src'},
-    keywords='NEL ALL Konsgberg Rename',
+    keywords='FBF FBZ ALL Konsgberg Rename',
     classifiers=[
-        'Development Status :: 2 - Beta',
+        'Development Status :: 3 - Beta',
         'Natural Language :: English',
         'Topic :: Scientific/Engineering'
         "Programming Language :: Python :: 3",
