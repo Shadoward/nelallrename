@@ -34,8 +34,11 @@ Example:
 
 ## Export products
 
-* Rename the *.all files
-* CSV file with all information needed to QC
++ Rename the *.all files
++ CSV logs files with all information needed to QC the data
+  + Duplicate_MBES_Log.csv (MBES duplicated data)
+  + NoLineNameFound_log.csv (SPL Session that do not have LineName information)
+  + Full_MBES_Log.csv (Full logged data)
+  + LineName_MBES_Log.csv (Log used to compare the LineName between sensor)
 
-## TO DO:
-
+## TO DO
