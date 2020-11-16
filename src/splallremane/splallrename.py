@@ -61,6 +61,7 @@ def process(args):
     allFolder = args.allFolder
     splFolder = args.splFolder
     SPLposition = args.SPLposition
+    vessel = SPLposition.split('-')[0]
     
     # Defined Dataframe
     dfSPL = pd.DataFrame(columns = ["Session Start", "Session End", "SPL LineName", "Vessel Name"])
@@ -97,8 +98,7 @@ def process(args):
         print('')
         print('Reading the FBZ Files')
         with tqdm(total=len(splListFile)) as pbar:
-            for n in splListFile:
-                vessel = n.split('-')[0]              
+            for n in splListFile:              
                 SessionStart, SessionEnd, LineName, er = FBZ2CSV(n , splFolder)
                 dfSPL = dfSPL.append(pd.Series([SessionStart, SessionEnd, LineName, vessel], 
                                        index=dfSPL.columns ), ignore_index=True)
@@ -112,8 +112,7 @@ def process(args):
         print('')
         print('Reading the FBF Files')
         with tqdm(total=len(splListFile)) as pbar:
-            for n in splListFile:                
-                vessel = n.split('-')[0]
+            for n in splListFile:
                 SessionStart, SessionEnd, LineName, er = FBF2CSV(n , splFolder)
                 dfSPL = dfSPL.append(pd.Series([SessionStart, SessionEnd, LineName, vessel], 
                                        index=dfSPL.columns ), ignore_index=True)
@@ -153,7 +152,6 @@ def process(args):
             dffilter = dfAll[dfAll['MBES Start'].between(Start, End)]
             for index, el in dffilter.iterrows():
                 AllFile =  el['FilePath']
-                Vessel = el['Vessel Name']
                 AllStartTime = el['MBES Start']
                 numberOfBytes = el['numberOfBytes']
                 STX = el['STX']
@@ -161,7 +159,7 @@ def process(args):
                 FolderName = os.path.split(AllFile)[0]
                 ALLName = os.path.splitext(os.path.basename(AllFile))[0]                               
                 NewName = FolderName + '\\' + ALLName + '_' + Name + '.all'
-                dftmp = dftmp.append(pd.Series([Start, End, Vessel, AllStartTime, numberOfBytes, STX, EMModel, AllFile, ALLName, Name, NewName], 
+                dftmp = dftmp.append(pd.Series([Start, End, vessel, AllStartTime, numberOfBytes, STX, EMModel, AllFile, ALLName, Name, NewName], 
                                     index=dftmp.columns ), ignore_index=True)
                 # rename the *.all file           
                 # if os.path.isfile(AllFile):
