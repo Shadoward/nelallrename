@@ -25,9 +25,7 @@ import glob
 import os
 import subprocess
 
-import csv
 import pandas as pd
-import numpy as np
 
 from argparse import ArgumentParser
 from argparse import RawTextHelpFormatter
