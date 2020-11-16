@@ -26,11 +26,11 @@ extras_require = {
 
 setup(
     name='splallrename',
-    version='0.4.0',
+    version='0.4.1',
     description='Rename *.ALL using *.FBF/FBZ files',
     long_description=readme,
     author='Patrice Ponchant',
-    author_email='patrice.ponchant@furgo.com',
+    author_email='patrice.ponchant@fugro.com',
     include_package_data = True,
     install_requires=install_requires,
     extras_require=extras_require,

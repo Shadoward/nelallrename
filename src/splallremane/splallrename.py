@@ -41,6 +41,7 @@ def main():
         formatter_class=RawTextHelpFormatter)    
     parser.add_argument('-r', action='store_true', default=False, dest='recursive', help='Search recursively for XTF files.')
     parser.add_argument('-fbz', action='store_true', default=False, dest='fbfFormat', help='If FBZ, use this argument.')
+    parser.add_argument('-rename', action='store_true', default=False, dest='rename', help='If you need to rename the files, use this argument.')
     parser.add_argument('allFolder', action='store', help='allFolder (str): ALL folder path. This is the path where the *.all files to process are.')
     parser.add_argument('splFolder', action='store', help='splFolder (str): SPL folder path. This is the path where the *.fbf/*.fbz files to process are.')
     parser.add_argument('SPLposition', action='store', help='SPLposition (str): SPL postion file to be use to rename the *.all.')
@@ -159,9 +160,10 @@ def process(args):
                 NewName = FolderName + '\\' + ALLName + '_' + Name + '.all'
                 dftmp = dftmp.append(pd.Series([Start, End, vessel, AllStartTime, numberOfBytes, STX, EMModel, AllFile, ALLName, Name, NewName], 
                                     index=dftmp.columns ), ignore_index=True)
-                # rename the *.all file           
-                # if os.path.isfile(AllFile):
-                #     os.rename(AllFile, NewName)        
+                # rename the *.all file
+                if args.rename:                           
+                    if os.path.isfile(AllFile):
+                        os.rename(AllFile, NewName)        
                 pbar.update(1)
                 
     print('')
@@ -184,7 +186,6 @@ def process(args):
         print("")
         print(f"A total of {len(duplicate)} *.all was/were duplicated.")
         print("Please check the Duplicate_MBES_Log.csv for more information.")
-        print("The first *.all occurrence was renamed.")
         duplicate.to_csv(allFolder + "Duplicate_MBES_Log.csv", index=True)
         dftmp = dftmp.drop_duplicates(subset='MBES Start', keep='first')
    

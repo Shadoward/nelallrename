@@ -2,13 +2,13 @@
 
 ## Introduction
 
-This python script will remane the .all and create a log based on the *-Positionfbf or *-.fbz file.
+This python script will remane the .all and create a log based on the *-Position.fbf or *-.fbz file.
 
 ## Setup
 
 Several modules need to be install before using the script. You will need:
 
-+ `$ pushd somepath\nelallremane`
++ `$ pushd somepath\splallremane`
 + `$ pip install .`
 
 ## Usage
