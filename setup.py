@@ -10,11 +10,10 @@ with open('LICENSE') as f:
     license = f.read()
 
 install_requires = [
-    'argparse',
-    'numpy',
     'pandas',
     'glob3',
     'tqdm',
+    'gooey',
 ]
 
 extras_require = {

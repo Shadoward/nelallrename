@@ -37,7 +37,7 @@ from tqdm import *
 ####### Code #######
 def main():
     parser = ArgumentParser(description='Rename the *.all files using the *-position.fbf or .fbz files',
-        epilog='Example: \n To rename the *.all file use python splallremane.py -r -fbz c:/temp/all/ c:/temp/fbf/ FugroBrasilis-CRP-Position \n',
+        epilog='Example: \n To rename the *.all file use python splallremane.py -r -fbz -rename c:/temp/all/ c:/temp/fbf/ FugroBrasilis-CRP-Position \n',
         formatter_class=RawTextHelpFormatter)    
     parser.add_argument('-r', action='store_true', default=False, dest='recursive', help='Search recursively for XTF files.')
     parser.add_argument('-fbz', action='store_true', default=False, dest='fbfFormat', help='If FBZ, use this argument.')
